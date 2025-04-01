@@ -15,6 +15,9 @@ sidebarToggle.addEventListener('click', () => {
     sidebarToggle.classList.toggle('active');
 });
 
+// Tải danh sách quảng cáo khi trang được tải
+window.addEventListener('load', loadAds);
+
 // Xử lý tải lên và xem trước hình ảnh
 const imageInput = document.getElementById('image');
 const form = document.querySelector('.post-form');
@@ -126,7 +129,7 @@ form.addEventListener('submit', async function(e) {
 
         const formData = new FormData(this);
         
-        const response = await fetch('http://localhost:3001/api/ads', {
+        const response = await fetch('/api/ads', {
             method: 'POST',
             body: formData
         });
@@ -251,15 +254,13 @@ document.querySelectorAll('.comment-form').forEach(form => {
     });
 });
 
-// Tải danh sách quảng cáo khi trang được load
+// Tải danh sách quảng cáo
 async function loadAds() {
     try {
-        const response = await fetch('http://localhost:3001/api/ads');
-        
+        const response = await fetch('/api/ads');
         if (!response.ok) {
-            throw new Error('Không thể tải danh sách quảng cáo');
+            throw new Error('Lỗi khi tải danh sách quảng cáo');
         }
-
         const ads = await response.json();
         
         const postSection = document.querySelector('.post-section');
@@ -275,7 +276,7 @@ async function loadAds() {
             postSection.appendChild(adCard);
         });
     } catch (error) {
-        console.error('Lỗi khi tải danh sách quảng cáo:', error);
+        console.error('Lỗi:', error);
         const postSection = document.querySelector('.post-section');
         postSection.innerHTML = `
             <h2>Danh sách quảng cáo</h2>
@@ -290,39 +291,37 @@ async function loadAds() {
     }
 }
 
-// Xử lý hiển thị form bình luận
+// Xử lý bình luận
 function setupCommentHandlers(adCard) {
     const commentTypes = adCard.querySelectorAll('.comment-type');
-    const commentForms = adCard.querySelector('.comment-forms');
+    const commentForms = adCard.querySelectorAll('.comment-form');
     const commentLists = adCard.querySelectorAll('.comment-list');
 
     commentTypes.forEach(type => {
         type.addEventListener('click', () => {
             const commentType = type.dataset.type;
             
-            // Hiển thị form bình luận
-            commentForms.style.display = 'block';
-            adCard.querySelectorAll('.comment-form').forEach(form => {
-                form.classList.remove('active');
-            });
-            adCard.querySelector(`.comment-form[data-type="${commentType}"]`).classList.add('active');
-
-            // Hiển thị danh sách bình luận
-            commentLists.forEach(list => list.classList.remove('active'));
-            adCard.querySelector(`.comment-list[data-type="${commentType}"]`).classList.add('active');
+            // Ẩn tất cả form và danh sách bình luận
+            commentForms.forEach(form => form.style.display = 'none');
+            commentLists.forEach(list => list.style.display = 'none');
+            
+            // Hiển thị form và danh sách tương ứng
+            const targetForm = adCard.querySelector(`.comment-form[data-type="${commentType}"]`);
+            const targetList = adCard.querySelector(`.comment-list[data-type="${commentType}"]`);
+            
+            if (targetForm) targetForm.style.display = 'block';
+            if (targetList) targetList.style.display = 'block';
         });
     });
 
-    // Xử lý submit bình luận
-    adCard.querySelectorAll('.comment-form').forEach(form => {
-        const submitBtn = form.querySelector('button');
+    commentForms.forEach(form => {
         const textarea = form.querySelector('textarea');
-        const commentType = form.dataset.type;
-
+        const submitBtn = form.querySelector('button');
+        
         submitBtn.addEventListener('click', async () => {
             const text = textarea.value.trim();
             if (!text) return;
-
+            
             try {
                 const response = await fetch(`/api/ads/${adCard.dataset.id}/comment`, {
                     method: 'POST',
@@ -330,36 +329,40 @@ function setupCommentHandlers(adCard) {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        type: commentType,
+                        type: form.dataset.type,
                         text: text
                     })
                 });
 
                 if (!response.ok) {
-                    throw new Error('Lỗi khi đăng bình luận');
+                    throw new Error('Lỗi khi thêm bình luận');
                 }
 
-                const comment = await response.json();
+                const data = await response.json();
                 
-                // Thêm bình luận vào danh sách
-                const commentList = adCard.querySelector(`.comment-list[data-type="${commentType}"]`);
-                const commentElement = document.createElement('div');
-                commentElement.className = 'comment-item';
-                commentElement.innerHTML = `
-                    <div class="comment-text">${text}</div>
-                    <div class="comment-time">${new Date(comment.createdAt).toLocaleString()}</div>
-                `;
-                commentList.appendChild(commentElement);
-
                 // Cập nhật số lượng bình luận
-                const countElement = adCard.querySelector(`.comment-type[data-type="${commentType}"] .comment-count`);
-                countElement.textContent = parseInt(countElement.textContent) + 1;
+                const countElement = adCard.querySelector(`.comment-type[data-type="${form.dataset.type}"] .comment-count`);
+                if (countElement) {
+                    countElement.textContent = parseInt(countElement.textContent) + 1;
+                }
 
-                // Reset form
+                // Thêm bình luận mới vào danh sách
+                const commentList = adCard.querySelector(`.comment-list[data-type="${form.dataset.type}"]`);
+                if (commentList) {
+                    const commentElement = document.createElement('div');
+                    commentElement.className = 'comment-item';
+                    commentElement.innerHTML = `
+                        <p>${text}</p>
+                        <span class="comment-date">${new Date().toLocaleString()}</span>
+                    `;
+                    commentList.appendChild(commentElement);
+                }
+
+                // Xóa nội dung textarea
                 textarea.value = '';
             } catch (error) {
                 console.error('Lỗi:', error);
-                alert('Có lỗi xảy ra khi đăng bình luận');
+                alert('Có lỗi xảy ra khi thêm bình luận');
             }
         });
     });
@@ -367,142 +370,83 @@ function setupCommentHandlers(adCard) {
 
 // Tạo card quảng cáo
 function createAdCard(ad) {
-    const template = document.querySelector('#ad-template');
-    const card = template.content.cloneNode(true).children[0];
+    const template = document.getElementById('ad-template');
+    const card = template.content.cloneNode(true).querySelector('.ad-card');
     
-    card.className = 'ad-card';
     card.dataset.id = ad._id;
     
-    card.innerHTML = `
-        <div class="ad-image">
-            <img src="${ad.imageUrl}" alt="${ad.title}">
-        </div>
-        <div class="ad-content">
-            <h3>${ad.title}</h3>
-            <div class="business-info">
-                <strong>${ad.business}</strong>
-            </div>
-            <p>${ad.description}</p>
-            <div class="ad-meta">
-                <span><i class="fas fa-phone"></i> ${ad.contact}</span>
-                <span><i class="fas fa-map-marker-alt"></i> ${ad.address}</span>
-                <span><i class="fas fa-clock"></i> ${new Date(ad.createdAt).toLocaleDateString('vi-VN')}</span>
-            </div>
-            <div class="comment-section">
-                <div class="comment-types">
-                    <button class="comment-type" data-type="question">
-                        <i class="fas fa-question-circle" style="color: #3498db;"></i>
-                        <span class="comment-count">${ad.comments?.questions?.length || 0}</span>
-                    </button>
-                    <button class="comment-type" data-type="heart">
-                        <i class="fas fa-heart" style="color: #e74c3c;"></i>
-                        <span class="comment-count">${ad.comments?.hearts?.length || 0}</span>
-                    </button>
-                    <button class="comment-type" data-type="idea">
-                        <i class="fas fa-lightbulb" style="color: #f1c40f;"></i>
-                        <span class="comment-count">${ad.comments?.ideas?.length || 0}</span>
-                    </button>
-                    <button class="comment-type" data-type="report">
-                        <i class="fas fa-trash-alt" style="color: #95a5a6;"></i>
-                        <span class="comment-count">${ad.comments?.reports?.length || 0}</span>
-                    </button>
-                </div>
-                <div class="comment-forms" style="display: none;">
-                    <form class="comment-form" data-type="question">
-                        <textarea placeholder="Đặt câu hỏi của bạn..."></textarea>
-                        <button type="button">Gửi</button>
-                    </form>
-                    <form class="comment-form" data-type="heart">
-                        <textarea placeholder="Chia sẻ cảm nhận của bạn..."></textarea>
-                        <button type="button">Gửi</button>
-                    </form>
-                    <form class="comment-form" data-type="idea">
-                        <textarea placeholder="Đóng góp ý kiến của bạn..."></textarea>
-                        <button type="button">Gửi</button>
-                    </form>
-                    <form class="comment-form" data-type="report">
-                        <textarea placeholder="Báo cáo vấn đề..."></textarea>
-                        <button type="button">Gửi</button>
-                    </form>
-                </div>
-                <div class="comment-lists">
-                    <div class="comment-list" data-type="question">
-                        ${ad.comments?.questions?.map(comment => `
-                            <div class="comment-item">
-                                <div class="comment-text">${comment.text}</div>
-                                <div class="comment-time">${new Date(comment.createdAt).toLocaleString()}</div>
-                            </div>
-                        `).join('') || ''}
-                    </div>
-                    <div class="comment-list" data-type="heart">
-                        ${ad.comments?.hearts?.map(comment => `
-                            <div class="comment-item">
-                                <div class="comment-text">${comment.text}</div>
-                                <div class="comment-time">${new Date(comment.createdAt).toLocaleString()}</div>
-                            </div>
-                        `).join('') || ''}
-                    </div>
-                    <div class="comment-list" data-type="idea">
-                        ${ad.comments?.ideas?.map(comment => `
-                            <div class="comment-item">
-                                <div class="comment-text">${comment.text}</div>
-                                <div class="comment-time">${new Date(comment.createdAt).toLocaleString()}</div>
-                            </div>
-                        `).join('') || ''}
-                    </div>
-                    <div class="comment-list" data-type="report">
-                        ${ad.comments?.reports?.map(comment => `
-                            <div class="comment-item">
-                                <div class="comment-text">${comment.text}</div>
-                                <div class="comment-time">${new Date(comment.createdAt).toLocaleString()}</div>
-                            </div>
-                        `).join('') || ''}
-                    </div>
-                </div>
-            </div>
-            <button class="delete-btn" onclick="deleteAd('${ad._id}')">
-                <i class="fas fa-trash"></i> Xóa
-            </button>
-        </div>
-    `;
+    const img = card.querySelector('img');
+    img.src = ad.imageUrl;
+    img.alt = ad.title;
     
-    // Thêm xử lý bình luận
+    card.querySelector('h3').textContent = ad.title;
+    card.querySelector('.business-info').textContent = ad.business;
+    card.querySelector('.description').textContent = ad.description;
+    card.querySelector('.contact').textContent = ad.contact;
+    card.querySelector('.address').textContent = ad.address;
+    
+    // Định dạng ngày tháng
+    const date = new Date(ad.createdAt);
+    card.querySelector('.date').textContent = date.toLocaleString();
+    
+    // Thiết lập xử lý bình luận
     setupCommentHandlers(card);
+    
+    // Cập nhật số lượng bình luận
+    if (ad.comments) {
+        const commentTypes = ['question', 'heart', 'idea', 'report'];
+        commentTypes.forEach(type => {
+            const count = ad.comments.filter(c => c.type === type).length;
+            const countElement = card.querySelector(`.comment-type[data-type="${type}"] .comment-count`);
+            if (countElement) {
+                countElement.textContent = count;
+            }
+        });
 
+        // Thêm bình luận vào danh sách
+        commentTypes.forEach(type => {
+            const comments = ad.comments.filter(c => c.type === type);
+            const commentList = card.querySelector(`.comment-list[data-type="${type}"]`);
+            if (commentList) {
+                comments.forEach(comment => {
+                    const commentElement = document.createElement('div');
+                    commentElement.className = 'comment-item';
+                    commentElement.innerHTML = `
+                        <p>${comment.text}</p>
+                        <span class="comment-date">${new Date(comment.createdAt).toLocaleString()}</span>
+                    `;
+                    commentList.appendChild(commentElement);
+                });
+            }
+        });
+    }
+    
     return card;
 }
 
-// Hàm xóa quảng cáo
+// Xóa quảng cáo
 async function deleteAd(id) {
-    const password = prompt('Nhập mật khẩu để xóa bài viết:');
-    
-    if (password !== '2210') {
-        alert('Mật khẩu không đúng!');
+    if (!confirm('Bạn có chắc chắn muốn xóa quảng cáo này?')) {
         return;
     }
 
-    if (confirm('Bạn có chắc chắn muốn xóa quảng cáo này?')) {
-        try {
-            const response = await fetch(`/api/ads/${id}`, {
-                method: 'DELETE'
-            });
+    try {
+        const response = await fetch(`/api/ads/${id}`, {
+            method: 'DELETE'
+        });
 
-            if (!response.ok) {
-                throw new Error('Lỗi khi xóa quảng cáo');
-            }
-
-            const card = document.querySelector(`[data-id="${id}"]`);
-            if (card) {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(20px)';
-                setTimeout(() => card.remove(), 300);
-            }
-        } catch (error) {
-            console.error('Lỗi:', error);
-            alert('Có lỗi xảy ra khi xóa quảng cáo');
+        if (!response.ok) {
+            throw new Error('Lỗi khi xóa quảng cáo');
         }
-    }
-}
 
-// Load danh sách quảng cáo khi trang được tải
-document.addEventListener('DOMContentLoaded', loadAds); 
+        const card = document.querySelector(`.ad-card[data-id="${id}"]`);
+        if (card) {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            setTimeout(() => card.remove(), 300);
+        }
+    } catch (error) {
+        console.error('Lỗi:', error);
+        alert('Có lỗi xảy ra khi xóa quảng cáo');
+    }
+} 
