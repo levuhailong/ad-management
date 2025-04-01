@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Long</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%2398D8AA'/></svg>">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <button class="sidebar-toggle">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <header>
+        <div class="logo">
+            <i class="fas fa-ad"></i>
+            <span>LONG</span>
+        </div>
+    </header>
+
+    <aside class="info-sidebar">
+        <div class="info-header">
+            <h2><i class="fas fa-info-circle"></i> Thông tin liên hệ</h2>
+        </div>
+        <div class="info-content">
+            <div class="info-section">
+                <h3><i class="fas fa-address-card"></i> Liên hệ</h3>
+                <div class="info-item">
+                    <i class="fas fa-phone-alt"></i>
+                    <div class="info-details">
+                        <span class="info-label">Điện thoại</span>
+                        <span class="info-value">(+84) 0987511760</span>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-envelope"></i>
+                    <div class="info-details">
+                        <span class="info-label">Email</span>
+                        <span class="info-value">hailong.levu@gmail.com</span>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <div class="info-details">
+                        <span class="info-label">Địa chỉ</span>
+                        <span class="info-value">Hải Phòng, Việt Nam</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-section">
+                <h3><i class="fas fa-share-alt"></i> Mạng xã hội</h3>
+                <div class="social-links">
+                    <a href="https://facebook.com/longchoquotes" target="_blank" class="social-item facebook">
+                        <i class="fab fa-facebook"></i>
+                        <div class="social-details">
+                            <span class="social-label">Facebook</span>
+                            <span class="social-value">longchoquotes</span>
+                        </div>
+                    </a>
+                    <a href="https://instagram.com/levuhailong" target="_blank" class="social-item instagram">
+                        <i class="fab fa-instagram"></i>
+                        <div class="social-details">
+                            <span class="social-label">Instagram</span>
+                            <span class="social-value">levuhailong</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <div class="info-section">
+                <h3><i class="fas fa-chart-line"></i> Thống kê</h3>
+                <div class="visitor-counter">
+                    <i class="fas fa-eye"></i>
+                    <div class="counter-details">
+                        <span class="counter-label">Lượt truy cập</span>
+                        <span class="counter-value" id="visitorCount">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <main>
+        <section class="guide-section">
+            <h2>Hướng dẫn đăng quảng cáo</h2>
+            <div class="guide-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mục</th>
+                            <th>Yêu cầu</th>
+                            <th>Hướng dẫn chi tiết</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Tiêu đề</td>
+                            <td>Tiêu đề quảng cáo</td>
+                            <td>- Ngắn gọn, súc tích<br>- Nêu bật được điểm nổi bật của sản phẩm/dịch vụ<br>- Không quá 100 ký tự<br>- Không sử dụng từ ngữ phản cảm</td>
+                        </tr>
+                        <tr>
+                            <td>Tên</td>
+                            <td>Tên doanh nghiệp</td>
+                            <td>- Tên đầy đủ của doanh nghiệp<br>- Tên thương hiệu (nếu có)</td>
+                        </tr>
+                        <tr>
+                            <td>Nội dung</td>
+                            <td>Nội dung quảng cáo</td>
+                            <td>- Mô tả chi tiết sản phẩm/dịch vụ<br>- Giá cả, khuyến mãi (nếu có)<br>- Thông tin liên hệ (số điện thoại, email)<br>- Địa chỉ kinh doanh</td>
+                        </tr>
+                        <tr>
+                            <td>Hình ảnh</td>
+                            <td>File hình ảnh</td>
+                            <td>- Định dạng: JPG, PNG, GIF<br>- Kích thước tối đa: 5MB<br>- Độ phân giải tốt<br>- Hình ảnh thực tế của sản phẩm/dịch vụ<br>- Không chứa nội dung nhạy cảm</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <div class="post-form-section">
+            <h2><i class="fas fa-edit"></i> Đăng quảng cáo mới</h2>
+            <form class="post-form">
+                <div class="form-group">
+                    <label for="title">Tiêu đề quảng cáo:</label>
+                    <input type="text" id="title" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="business">Tên doanh nghiệp:</label>
+                    <input type="text" id="business" name="business" required>
+                </div>
+                <div class="form-group">
+                    <label for="description">Nội dung quảng cáo:</label>
+                    <textarea id="description" name="description" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="contact">Thông tin liên hệ:</label>
+                    <input type="text" id="contact" name="contact" required>
+                </div>
+                <div class="form-group">
+                    <label for="address">Địa chỉ kinh doanh:</label>
+                    <input type="text" id="address" name="address" required>
+                </div>
+                <div class="form-group">
+                    <label for="image">Hình ảnh:</label>
+                    <input type="file" id="image" name="image" accept="image/*" required>
+                </div>
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-paper-plane"></i> Đăng quảng cáo
+                </button>
+            </form>
+        </div>
+
+        <div class="post-section">
+            <h2><i class="fas fa-list"></i> Danh sách quảng cáo</h2>
+        </div>
+    </main>
+
+    <template id="ad-template">
+        <div class="ad-card">
+            <div class="ad-image">
+                <img src="" alt="Hình ảnh quảng cáo">
+                <button class="delete-btn" onclick="deleteAd(this.closest('.ad-card').dataset.id)">
+                    <i class="fas fa-trash"></i> Xóa
+                </button>
+            </div>
+            <div class="ad-content">
+                <h3></h3>
+                <div class="business-info"></div>
+                <p class="description"></p>
+                <div class="ad-meta">
+                    <span><i class="fas fa-phone"></i> <span class="contact"></span></span>
+                    <span><i class="fas fa-map-marker-alt"></i> <span class="address"></span></span>
+                    <span><i class="fas fa-clock"></i> <span class="date"></span></span>
+                </div>
+                <div class="comments-section">
+                    <div class="comment-types">
+                        <div class="comment-type" data-type="question">
+                            <i class="fas fa-question-circle"></i>
+                            <span class="comment-count">0</span>
+                        </div>
+                        <div class="comment-type" data-type="heart">
+                            <i class="fas fa-heart"></i>
+                            <span class="comment-count">0</span>
+                        </div>
+                        <div class="comment-type" data-type="idea">
+                            <i class="fas fa-lightbulb"></i>
+                            <span class="comment-count">0</span>
+                        </div>
+                        <div class="comment-type" data-type="report">
+                            <i class="fas fa-trash-alt"></i>
+                            <span class="comment-count">0</span>
+                        </div>
+                    </div>
+                    <div class="comment-forms">
+                        <div class="comment-form" data-type="question">
+                            <textarea placeholder="Đặt câu hỏi..."></textarea>
+                            <button><i class="fas fa-paper-plane"></i></button>
+                        </div>
+                        <div class="comment-form" data-type="heart">
+                            <textarea placeholder="Chia sẻ cảm nhận..."></textarea>
+                            <button><i class="fas fa-paper-plane"></i></button>
+                        </div>
+                        <div class="comment-form" data-type="idea">
+                            <textarea placeholder="Đóng góp ý kiến..."></textarea>
+                            <button><i class="fas fa-paper-plane"></i></button>
+                        </div>
+                        <div class="comment-form" data-type="report">
+                            <textarea placeholder="Báo cáo vấn đề..."></textarea>
+                            <button><i class="fas fa-paper-plane"></i></button>
+                        </div>
+                    </div>
+                    <div class="comments-list">
+                        <div class="comment-list" data-type="question"></div>
+                        <div class="comment-list" data-type="heart"></div>
+                        <div class="comment-list" data-type="idea"></div>
+                        <div class="comment-list" data-type="report"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script src="js/main.js"></script>
+</body>
+</html> 
