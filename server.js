@@ -82,7 +82,10 @@ app.post('/api/ads', upload.single('image'), async (req, res) => {
             return res.status(400).json({ error: 'Vui lòng tải lên một hình ảnh' });
         }
 
+        // Lấy URL ảnh từ Cloudinary
         const imageUrl = req.file.path;
+        console.log('Image URL:', imageUrl); // Log để debug
+
         const ad = new Ad({
             title: req.body.title,
             business: req.body.business,
@@ -96,7 +99,7 @@ app.post('/api/ads', upload.single('image'), async (req, res) => {
         res.status(201).json(ad);
     } catch (error) {
         console.error('Lỗi tạo quảng cáo:', error);
-        res.status(500).json({ error: 'Lỗi server khi tạo quảng cáo' });
+        res.status(500).json({ error: 'Lỗi server khi tạo quảng cáo', details: error.message });
     }
 });
 
@@ -106,7 +109,7 @@ app.get('/api/ads', async (req, res) => {
         res.json(ads);
     } catch (error) {
         console.error('Lỗi lấy danh sách quảng cáo:', error);
-        res.status(500).json({ error: 'Lỗi server khi lấy danh sách quảng cáo' });
+        res.status(500).json({ error: 'Lỗi server khi lấy danh sách quảng cáo', details: error.message });
     }
 });
 
@@ -119,15 +122,25 @@ app.delete('/api/ads/:id', async (req, res) => {
 
         // Xóa ảnh từ Cloudinary
         if (ad.imageUrl) {
-            const publicId = ad.imageUrl.split('/').pop().split('.')[0];
-            await cloudinary.uploader.destroy(`ad-management/${publicId}`);
+            try {
+                // Lấy public_id từ URL
+                const urlParts = ad.imageUrl.split('/');
+                const publicId = urlParts[urlParts.length - 1].split('.')[0];
+                console.log('Deleting image with public_id:', publicId); // Log để debug
+                
+                await cloudinary.uploader.destroy(`ad-management/${publicId}`);
+                console.log('Image deleted successfully from Cloudinary'); // Log để debug
+            } catch (cloudinaryError) {
+                console.error('Lỗi xóa ảnh từ Cloudinary:', cloudinaryError);
+                // Tiếp tục xóa quảng cáo ngay cả khi không xóa được ảnh
+            }
         }
 
         await ad.deleteOne();
         res.json({ message: 'Đã xóa quảng cáo thành công' });
     } catch (error) {
         console.error('Lỗi xóa quảng cáo:', error);
-        res.status(500).json({ error: 'Lỗi server khi xóa quảng cáo' });
+        res.status(500).json({ error: 'Lỗi server khi xóa quảng cáo', details: error.message });
     }
 });
 
@@ -147,17 +160,26 @@ app.post('/api/ads/:id/comment', async (req, res) => {
         res.json(ad);
     } catch (error) {
         console.error('Lỗi thêm bình luận:', error);
-        res.status(500).json({ error: 'Lỗi server khi thêm bình luận' });
+        res.status(500).json({ error: 'Lỗi server khi thêm bình luận', details: error.message });
     }
 });
 
 // Xử lý lỗi chung
 app.use((err, req, res, next) => {
     console.error('Lỗi server:', err);
-    res.status(500).json({ error: 'Đã xảy ra lỗi server' });
+    res.status(500).json({ 
+        error: 'Đã xảy ra lỗi server',
+        details: err.message,
+        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
 });
 
 // Khởi động server
 app.listen(PORT, () => {
     console.log(`Server đang chạy trên port ${PORT}`);
+    console.log('Cloudinary config:', {
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+        api_key: process.env.CLOUDINARY_API_KEY ? 'Đã cấu hình' : 'Chưa cấu hình',
+        api_secret: process.env.CLOUDINARY_API_SECRET ? 'Đã cấu hình' : 'Chưa cấu hình'
+    });
 }); 
