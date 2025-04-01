@@ -3,8 +3,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const multer = require('multer');
 const cors = require('cors');
-const path = require('path');
-const fs = require('fs');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,20 +13,49 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
-app.use('/uploads', express.static('uploads'));
 
-// Tạo thư mục uploads nếu chưa tồn tại
-if (!fs.existsSync('uploads')) {
-    fs.mkdirSync('uploads');
-}
+// Cấu hình Cloudinary
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
-// Kết nối MongoDB với xử lý lỗi
-mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log('Đã kết nối MongoDB thành công'))
-    .catch(err => {
+// Cấu hình multer với Cloudinary
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'ad-management',
+        allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp']
+    }
+});
+
+const upload = multer({
+    storage: storage,
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5MB
+    }
+});
+
+// Kết nối MongoDB với xử lý lỗi và retry
+const connectDB = async () => {
+    try {
+        await mongoose.connect(process.env.MONGODB_URI, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+            serverSelectionTimeoutMS: 5000,
+            retryWrites: true,
+            w: 'majority'
+        });
+        console.log('Đã kết nối MongoDB thành công');
+    } catch (err) {
         console.error('Lỗi kết nối MongoDB:', err);
-        process.exit(1);
-    });
+        // Thử kết nối lại sau 5 giây
+        setTimeout(connectDB, 5000);
+    }
+};
+
+connectDB();
 
 // Schema quảng cáo
 const adSchema = new mongoose.Schema({
@@ -46,31 +75,6 @@ const adSchema = new mongoose.Schema({
 
 const Ad = mongoose.model('Ad', adSchema);
 
-// Cấu hình multer
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/');
-    },
-    filename: function (req, file, cb) {
-        cb(null, Date.now() + '-' + file.originalname);
-    }
-});
-
-const upload = multer({
-    storage: storage,
-    limits: {
-        fileSize: 5 * 1024 * 1024 // 5MB
-    },
-    fileFilter: function (req, file, cb) {
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        if (allowedTypes.includes(file.mimetype)) {
-            cb(null, true);
-        } else {
-            cb(new Error('Định dạng file không được hỗ trợ'));
-        }
-    }
-});
-
 // API endpoints
 app.post('/api/ads', upload.single('image'), async (req, res) => {
     try {
@@ -78,7 +82,7 @@ app.post('/api/ads', upload.single('image'), async (req, res) => {
             return res.status(400).json({ error: 'Vui lòng tải lên một hình ảnh' });
         }
 
-        const imageUrl = `/uploads/${req.file.filename}`;
+        const imageUrl = req.file.path;
         const ad = new Ad({
             title: req.body.title,
             business: req.body.business,
@@ -113,12 +117,10 @@ app.delete('/api/ads/:id', async (req, res) => {
             return res.status(404).json({ error: 'Không tìm thấy quảng cáo' });
         }
 
-        // Xóa file ảnh
+        // Xóa ảnh từ Cloudinary
         if (ad.imageUrl) {
-            const imagePath = path.join(__dirname, ad.imageUrl);
-            if (fs.existsSync(imagePath)) {
-                fs.unlinkSync(imagePath);
-            }
+            const publicId = ad.imageUrl.split('/').pop().split('.')[0];
+            await cloudinary.uploader.destroy(`ad-management/${publicId}`);
         }
 
         await ad.deleteOne();
