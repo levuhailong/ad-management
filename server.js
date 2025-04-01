@@ -15,11 +15,16 @@ app.use(cors());
 app.use(express.json());
 
 // Phục vụ file tĩnh từ thư mục public
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Route cho trang chủ
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    try {
+        res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    } catch (error) {
+        console.error('Lỗi khi phục vụ file index.html:', error);
+        res.status(500).send('Lỗi server');
+    }
 });
 
 // Cấu hình Cloudinary
